@@ -12,7 +12,7 @@ import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 
 const val EMPTY_ARRAY_STRING = "[]"
-const val API_PATH = "/api/v1.0/books"
+const val API_PATH = "/api/v1.0"
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -47,92 +47,94 @@ class LibraryApplicationTests(@Autowired private val template : TestRestTemplate
         false
     )
 
+    fun insertThreeBooks() {
+        template.put("${API_PATH}/books", HarryPotterBook)
+        template.put("${API_PATH}/books", HarryPotterBook2)
+        template.put("${API_PATH}/books", HarryPotterBook3)
+    }
+
     @BeforeAll
     fun `Check that there is no books in database`() {
-        val response = template.getForObject("${API_PATH}/", String::class.java)
+        val response = template.getForObject("${API_PATH}/books", String::class.java)
         assertEquals(EMPTY_ARRAY_STRING, response)
     }
 
     @Test
     fun `Add a book, get it, set it as unread then delete it`() {
-        val responseAfterPut = template.exchange("${API_PATH}/", HttpMethod.PUT, HttpEntity(HarryPotterBook), Integer::class.java)
+        val responseAfterPut = template.exchange("${API_PATH}/books", HttpMethod.PUT, HttpEntity(HarryPotterBook), Integer::class.java)
         val bookId = responseAfterPut.body
-        val requestedBook = template.getForObject("${API_PATH}/${bookId}", String::class.java)
+        val requestedBook = template.getForObject("${API_PATH}/books/${bookId}", String::class.java)
         assertEquals(gson.toJson(HarryPotterBook), requestedBook)
-        template.put("${API_PATH}/${bookId}", ReadAlready(false))
-        val bookAfterPatch = template.getForObject("${API_PATH}/${responseAfterPut.body}", Book::class.java)
+        template.put("${API_PATH}/books/${bookId}", ReadAlready(false))
+        val bookAfterPatch = template.getForObject("${API_PATH}/books/${responseAfterPut.body}", Book::class.java)
         assertEquals(false, bookAfterPatch.readAlready)
-        template.delete("${API_PATH}/${bookId}")
-        val responseAfterDeletion = template.getForObject("${API_PATH}/${bookId}", String::class.java)
+        template.delete("${API_PATH}/books/${bookId}")
+        val responseAfterDeletion = template.getForObject("${API_PATH}/books/${bookId}", String::class.java)
         assert(responseAfterDeletion.contains("404"))
     }
 
 
     @Test
     fun `Add three books, delete that not read, delete last`() {
-        template.put("${API_PATH}/", HarryPotterBook)
-        template.put("${API_PATH}/", HarryPotterBook2)
-        template.put("${API_PATH}/", HarryPotterBook3)
-        val arrayOfBooks = template.getForObject("${API_PATH}/", Array<Book>::class.java)
+        template.put("${API_PATH}/books", HarryPotterBook)
+        template.put("${API_PATH}/books", HarryPotterBook2)
+        template.put("${API_PATH}/books", HarryPotterBook3)
+        val arrayOfBooks = template.getForObject("${API_PATH}/books", Array<Book>::class.java)
         assertEquals(3, arrayOfBooks.size)
-        template.exchange("${API_PATH}/field/readAlready", HttpMethod.DELETE, HttpEntity(ReadAlready(false)), String::class.java)
-        val arrOfBooksAfterDeletion = template.getForObject("${API_PATH}/", Array<Book>::class.java)
+        template.exchange("${API_PATH}/books/field/readAlready", HttpMethod.DELETE, HttpEntity(ReadAlready(false)), String::class.java)
+        val arrOfBooksAfterDeletion = template.getForObject("${API_PATH}/books", Array<Book>::class.java)
         assertEquals(1, arrOfBooksAfterDeletion.size)
         val lastBook = arrOfBooksAfterDeletion.first()
         assertEquals(HarryPotterBook, lastBook)
-        template.delete("${API_PATH}/${lastBook.id}")
-        val response = template.getForObject("${API_PATH}/", String::class.java)
+        template.delete("${API_PATH}/books/${lastBook.id}")
+        val response = template.getForObject("${API_PATH}/books", String::class.java)
         assertEquals(EMPTY_ARRAY_STRING, response)
     }
 
     @Test
     fun `Add three books, delete by year`() {
-        template.put("${API_PATH}/", HarryPotterBook)
-        template.put("${API_PATH}/", HarryPotterBook2)
-        template.put("${API_PATH}/", HarryPotterBook3)
-        val arrayOfBooks = template.getForObject("${API_PATH}/", Array<Book>::class.java)
+        template.put("${API_PATH}/books", HarryPotterBook)
+        template.put("${API_PATH}/books", HarryPotterBook2)
+        template.put("${API_PATH}/books", HarryPotterBook3)
+        val arrayOfBooks = template.getForObject("${API_PATH}/books", Array<Book>::class.java)
         assertEquals(3, arrayOfBooks.size)
-        template.delete("${API_PATH}/field/printYear/1999", HttpMethod.DELETE)
-        assertEquals(2, template.getForObject("${API_PATH}/", Array<Book>::class.java).size)
-        template.delete("${API_PATH}/field/printYear/1998", HttpMethod.DELETE)
-        assertEquals(1, template.getForObject("${API_PATH}/", Array<Book>::class.java).size)
-        template.delete("${API_PATH}/field/printYear/1997", HttpMethod.DELETE)
-        assertEquals(0, template.getForObject("${API_PATH}/", Array<Book>::class.java).size)
+        template.delete("${API_PATH}/books/field/printYear/1999", HttpMethod.DELETE)
+        assertEquals(2, template.getForObject("${API_PATH}/books", Array<Book>::class.java).size)
+        template.delete("${API_PATH}/books/field/printYear/1998", HttpMethod.DELETE)
+        assertEquals(1, template.getForObject("${API_PATH}/books", Array<Book>::class.java).size)
+        template.delete("${API_PATH}/books/field/printYear/1997", HttpMethod.DELETE)
+        assertEquals(0, template.getForObject("${API_PATH}/books", Array<Book>::class.java).size)
     }
 
     @Test
     fun `Add three books, find by year`() {
-        template.put("${API_PATH}/", HarryPotterBook)
-        template.put("${API_PATH}/", HarryPotterBook2)
-        template.put("${API_PATH}/", HarryPotterBook3)
-        assertEquals(1, template.getForObject("${API_PATH}/field/printYear/1997", Array<Book>::class.java).size)
-        assertEquals(1, template.getForObject("${API_PATH}/field/printYear/1998", Array<Book>::class.java).size)
-        assertEquals(1, template.getForObject("${API_PATH}/field/printYear/1999", Array<Book>::class.java).size)
-        template.put("${API_PATH}/1", ReadAlready(false))
-        val arrayOfBooks = template.postForObject("${API_PATH}/field/readAlready", HttpEntity(ReadAlready(false)), Array<Book>::class.java)
+        insertThreeBooks()
+        assertEquals(1, template.getForObject("${API_PATH}/books/field/printYear/1997", Array<Book>::class.java).size)
+        assertEquals(1, template.getForObject("${API_PATH}/books/field/printYear/1998", Array<Book>::class.java).size)
+        assertEquals(1, template.getForObject("${API_PATH}/books/field/printYear/1999", Array<Book>::class.java).size)
+        template.put("${API_PATH}/books/1", ReadAlready(false))
+        val arrayOfBooks = template.postForObject("${API_PATH}/books/field/readAlready", HttpEntity(ReadAlready(false)), Array<Book>::class.java)
         assertEquals(3, arrayOfBooks.size)
-        template.exchange("${API_PATH}/field/readAlready", HttpMethod.DELETE, HttpEntity(ReadAlready(false)), String::class.java)
+        template.exchange("${API_PATH}/books/field/readAlready", HttpMethod.DELETE, HttpEntity(ReadAlready(false)), String::class.java)
     }
 
     @Test
     fun `Delete all`() {
-        template.put("${API_PATH}/", HarryPotterBook)
-        template.put("${API_PATH}/", HarryPotterBook2)
-        template.put("${API_PATH}/", HarryPotterBook3)
-        val arrayOfBooks = template.getForObject("${API_PATH}/", Array<Book>::class.java)
+        insertThreeBooks()
+        val arrayOfBooks = template.getForObject("${API_PATH}/books", Array<Book>::class.java)
         assertEquals(3, arrayOfBooks.size)
-        template.delete("${API_PATH}/")
-        assertEquals(0, template.getForObject("${API_PATH}/", Array<Book>::class.java).size)
+        template.delete("${API_PATH}/books")
+        assertEquals(0, template.getForObject("${API_PATH}/books", Array<Book>::class.java).size)
     }
 
     @Test
     fun `Update book by id`() {
-        template.put("${API_PATH}/", HarryPotterBook)
-        val bookFromRequest = template.getForObject("${API_PATH}/1", Book::class.java)
+        template.put("${API_PATH}/books", HarryPotterBook)
+        val bookFromRequest = template.getForObject("${API_PATH}/books/1", Book::class.java)
         assertEquals(bookFromRequest, HarryPotterBook)
         val updatedBook = Book(1, HarryPotterBook.title, HarryPotterBook.author, "It isn't my favorite...", "", 2000, false)
-        template.postForObject("${API_PATH}/", HttpEntity(updatedBook), String::class.java)
-        val updatedBookRequested = template.getForObject("${API_PATH}/1", Book::class.java)
+        template.postForObject("${API_PATH}/books", HttpEntity(updatedBook), String::class.java)
+        val updatedBookRequested = template.getForObject("${API_PATH}/books/1", Book::class.java)
         assertEquals(updatedBook, updatedBookRequested)
     }
 }
