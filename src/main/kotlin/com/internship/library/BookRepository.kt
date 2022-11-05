@@ -28,12 +28,12 @@ interface BooksRepository : CrudRepository<Book, Long> {
     @Modifying
     @Transactional
     @Query("update Book set readAlready = :read_already where id = :book_id")
-    fun setAlreadyReadById(@Param("book_id") id: Long, @Param("read_already") readAlready: Boolean)
+    fun setAlreadyReadById(@Param("book_id") id: Long, @Param("read_already") value: Boolean)
 
     @Modifying
     @Transactional
     @Query("delete from Book where readAlready = :readAlready")
-    fun deleteBooksByReadAlready(@Param("readAlready") readAlready: Boolean)
+    fun deleteBooksByReadAlready(@Param("readAlready") value: Boolean)
 
     @Modifying
     @Transactional

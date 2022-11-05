@@ -65,7 +65,7 @@ class LibraryApplicationTests(@Autowired private val template : TestRestTemplate
         val bookId = responseAfterPut.body
         val requestedBook = template.getForObject("${API_PATH}/books/${bookId}", String::class.java)
         assertEquals(gson.toJson(HarryPotterBook), requestedBook)
-        template.put("${API_PATH}/books/${bookId}", ReadAlready(false))
+        template.put("${API_PATH}/books/${bookId}", ReadAlreadyBody(false))
         val bookAfterPatch = template.getForObject("${API_PATH}/books/${responseAfterPut.body}", Book::class.java)
         assertEquals(false, bookAfterPatch.readAlready)
         template.delete("${API_PATH}/books/${bookId}")
@@ -81,7 +81,7 @@ class LibraryApplicationTests(@Autowired private val template : TestRestTemplate
         template.put("${API_PATH}/books", HarryPotterBook3)
         val arrayOfBooks = template.getForObject("${API_PATH}/books", Array<Book>::class.java)
         assertEquals(3, arrayOfBooks.size)
-        template.exchange("${API_PATH}/books/field/readAlready", HttpMethod.DELETE, HttpEntity(ReadAlready(false)), String::class.java)
+        template.exchange("${API_PATH}/books/field/readAlready", HttpMethod.DELETE, HttpEntity(ReadAlreadyBody(false)), String::class.java)
         val arrOfBooksAfterDeletion = template.getForObject("${API_PATH}/books", Array<Book>::class.java)
         assertEquals(1, arrOfBooksAfterDeletion.size)
         val lastBook = arrOfBooksAfterDeletion.first()
@@ -112,10 +112,10 @@ class LibraryApplicationTests(@Autowired private val template : TestRestTemplate
         assertEquals(1, template.getForObject("${API_PATH}/books/field/printYear/1997", Array<Book>::class.java).size)
         assertEquals(1, template.getForObject("${API_PATH}/books/field/printYear/1998", Array<Book>::class.java).size)
         assertEquals(1, template.getForObject("${API_PATH}/books/field/printYear/1999", Array<Book>::class.java).size)
-        template.put("${API_PATH}/books/1", ReadAlready(false))
-        val arrayOfBooks = template.postForObject("${API_PATH}/books/field/readAlready", HttpEntity(ReadAlready(false)), Array<Book>::class.java)
+        template.put("${API_PATH}/books/1", ReadAlreadyBody(false))
+        val arrayOfBooks = template.postForObject("${API_PATH}/books/field/readAlready", HttpEntity(ReadAlreadyBody(false)), Array<Book>::class.java)
         assertEquals(3, arrayOfBooks.size)
-        template.exchange("${API_PATH}/books/field/readAlready", HttpMethod.DELETE, HttpEntity(ReadAlready(false)), String::class.java)
+        template.exchange("${API_PATH}/books/field/readAlready", HttpMethod.DELETE, HttpEntity(ReadAlreadyBody(false)), String::class.java)
     }
 
     @Test

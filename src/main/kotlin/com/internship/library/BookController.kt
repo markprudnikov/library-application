@@ -41,8 +41,8 @@ class BooksController(private val repository: BooksRepository) {
     @PutMapping("/books/{id}", MediaType.APPLICATION_JSON_VALUE)
     fun setAlreadyReadById(
         @PathVariable id: Long,
-        @RequestBody readAlready: ReadAlready
-    ) = repository.setAlreadyReadById(id, readAlready.value)
+        @RequestBody body: ReadAlreadyBody
+    ) = repository.setAlreadyReadById(id, body.readAlready)
 
     @DeleteMapping("/books/{id}")
     fun deleteBookById(@PathVariable id: Long) = repository.deleteById(id)
@@ -54,11 +54,11 @@ class BooksController(private val repository: BooksRepository) {
     fun deleteBooksByPrintYear(@PathVariable printYear: Int) = repository.deleteBooksByPrintYear(printYear)
 
     @PostMapping("/books/field/readAlready")
-    fun findBooksThatAlreadyRead(@RequestBody readAlready: ReadAlready) =
-        repository.findBooksByReadAlready(readAlready.value)
+    fun findBooksThatAlreadyRead(@RequestBody body: ReadAlreadyBody) =
+        repository.findBooksByReadAlready(body.readAlready)
 
     @DeleteMapping("/books/field/readAlready", MediaType.APPLICATION_JSON_VALUE)
-    fun deleteBooksByReadAlready(@RequestBody readAlready: ReadAlready) =
-        repository.deleteBooksByReadAlready(readAlready.value)
+    fun deleteBooksByReadAlready(@RequestBody body: ReadAlreadyBody) =
+        repository.deleteBooksByReadAlready(body.readAlready)
 
 }

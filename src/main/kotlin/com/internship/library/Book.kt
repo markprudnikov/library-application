@@ -14,4 +14,4 @@ data class Book(
     var printYear: Int,
     var readAlready: Boolean)
 
-data class ReadAlready(val value: Boolean)
+data class ReadAlreadyBody(val readAlready: Boolean)
